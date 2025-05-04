@@ -1,50 +1,54 @@
-#include <arduino.h>
-#include <DHT11.h>
 
+#include "lcd-display.h"
+#include "air-sensor.h"
 #include "ground-sensor.h"
-#include "diod-display.h"
 
-#define DHT11PIN 10
+LCDDisplay lcd;
+AirSensor air;
+GroundSensor ground;
 
-GroundSensor groundSensor(A0);
-DiodDisplay diods;
-DHT11 dht11(DHT11PIN);
+#define MEASSURE_DELAY 30000lu
 
 void setup() {
   Serial.begin(9600);
-  Serial.println("Reading From the Sensor ...");
 
-  delay(2000);  
+  lcd.init();
+
+  Serial.println("Initialized");
 }
 
-void loop() {
-  int groundHumidity = groundSensor.getValue();
+void loop()
+{
+  lcd.listenButton();
 
-  diods.print(groundHumidity);
+  if (shouldMessure()) {
+    Serial.println("meassuring");
 
-  Serial.print("Ground humidity: ");
-  Serial.print(groundHumidity);
-  Serial.println(" %");
+    PrintData data = meassure();
 
-  printAirData();
-
-  delay(5000);
+    lcd.print(data);
+  }
 }
 
-void printAirData() {
-    int temperature = 0;
-    int humidity = 0;
+PrintData meassure() {
+  AirMeassure airData = air.meassure();
+  float gh = ground.getValue();
 
-    int result = dht11.readTemperatureHumidity(temperature, humidity);
+  return PrintData(airData.temperature, airData.humidity, gh);
+}
 
-    if (result == 0) {
-        Serial.print("Temperature: ");
-        Serial.print(temperature);
-        Serial.println(" °C");
-        Serial.print("Humidity: ");
-        Serial.print(humidity);
-        Serial.println(" %");
-    } else {
-        Serial.println(DHT11::getErrorString(result));
-    }
+bool shouldMessure() {
+  static unsigned long lastMessure = -MEASSURE_DELAY;
+
+  unsigned long now = millis();
+
+  bool shouldUpdateForDefaultDelay = (now - lastMessure) > MEASSURE_DELAY;
+
+  if (shouldUpdateForDefaultDelay) {
+    lastMessure = now;
+
+    return true;
+  }
+
+  return false;
 }

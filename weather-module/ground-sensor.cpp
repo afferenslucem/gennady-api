@@ -1,9 +1,5 @@
 #include "ground-sensor.h"
 
-GroundSensor::GroundSensor(int port) {
-  this->_port = port;
-}
-
 int GroundSensor::getValue() {
   float rawValue = analogRead(this->_port);
 

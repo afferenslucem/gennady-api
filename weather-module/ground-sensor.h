@@ -3,13 +3,14 @@
 
 #include <arduino.h>
 
+#define GROUND_SERSOR_PIN 3
+
 class GroundSensor {
   private:
-    int _port;
+    int _port = GROUND_SERSOR_PIN;
     float mapValue(float rawValue);
 
   public:
-    GroundSensor(int port);
     int getValue();
 };
 
